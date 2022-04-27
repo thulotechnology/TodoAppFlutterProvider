@@ -17,15 +17,15 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 allTodos.clearTodo();
               },
-              icon: Icon(Icons.delete),
-              label: Text("Clear")),
+              icon: const Icon(Icons.delete),
+              label: const Text("Clear")),
           ElevatedButton.icon(
               onPressed: null,
-              icon: Icon(Icons.countertops),
+              icon: const Icon(Icons.countertops),
               label: Text("Total = ${allTodos.items.length}")),
         ],
       ),
-      body: allTodos.items.length == 0
+      body: allTodos.items.isEmpty
           ? Center(
               child: Container(
                 child: Text(
@@ -71,7 +71,10 @@ class HomePage extends StatelessWidget {
                           size: 20.0,
                           color: Colors.brown[900],
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          addOrUpdateDialog(context, false,
+                              todo: allTodos.items[i], index: i);
+                        },
                       ),
                       IconButton(
                         icon: Icon(
@@ -110,20 +113,28 @@ class HomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
           onPressed: () {
-            showAlertDialog(context);
+            addOrUpdateDialog(context, true);
           }),
     );
   }
 }
 
-showAlertDialog(BuildContext context) {
+addOrUpdateDialog(BuildContext context, bool isAdded,
+    {Todo? todo, int? index}) {
   TextEditingController cTitle = TextEditingController();
   TextEditingController cDesc = TextEditingController();
+
+  if (!isAdded) {
+    cTitle.text = todo!.title;
+    cDesc.text = todo.description;
+  }
+
   final allTodos = Provider.of<TodoModel>(context, listen: false);
   // Create AlertDialog
   AlertDialog alert = AlertDialog(
-    title: Text("Add Todo"),
+    title: isAdded ? Text("Add Todo") : Text("Update Todo"),
     content: Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextField(
           controller: cTitle,
@@ -132,17 +143,29 @@ showAlertDialog(BuildContext context) {
         TextField(
           controller: cDesc,
           decoration: InputDecoration(labelText: "Description"),
+          maxLength: null,
         ),
       ],
     ),
     actions: [
       ElevatedButton(
           onPressed: () {
-            allTodos.addTodo(Todo(
-                id: Random().nextInt(1000000),
-                title: cTitle.text,
-                description: cDesc.text,
-                isImportant: true));
+            if (isAdded) {
+              allTodos.addTodo(Todo(
+                  id: Random().nextInt(1000000),
+                  title: cTitle.text,
+                  description: cDesc.text,
+                  isImportant: true));
+            } else {
+              // Update Code
+              allTodos.updateTodo(
+                  index!,
+                  Todo(
+                      id: Random().nextInt(1000000),
+                      title: cTitle.text,
+                      description: cDesc.text,
+                      isImportant: true));
+            }
             Navigator.pop(context);
           },
           child: Text("Save")),
