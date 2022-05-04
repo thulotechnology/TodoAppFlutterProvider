@@ -9,13 +9,34 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allTodos = Provider.of<TodoModel>(context);
+    allTodos.loadTodos();
     return Scaffold(
       appBar: AppBar(
         title: const Text("Todo App "),
         actions: [
           ElevatedButton.icon(
               onPressed: () {
-                allTodos.clearTodo();
+                // allTodos.clearTodo();
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text("Do you want to  delete all?"),
+                        actions: [
+                          ElevatedButton(
+                              onPressed: () {
+                                allTodos.deleteAll();
+                                Navigator.pop(context);
+                              },
+                              child: Text("Confirm Delete")),
+                          OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("Cancel"))
+                        ],
+                      );
+                    });
               },
               icon: const Icon(Icons.delete),
               label: const Text("Clear")),
@@ -38,10 +59,17 @@ class HomePage extends StatelessWidget {
               itemCount: allTodos.items.length,
               itemBuilder: (ctx, i) {
                 return ListTile(
-                  leading: allTodos.items[i].isImportant
+                  leading: allTodos.items[i].isImportant == "imp"
                       ? GestureDetector(
                           onTap: () {
-                            allTodos.changeImportant(i);
+                            allTodos.updateTodo(Todo(
+                                id: allTodos.items[i].id,
+                                title: allTodos.items[i].title,
+                                description: allTodos.items[i].description,
+                                isImportant:
+                                    allTodos.items[i].isImportant == "imp"
+                                        ? "nimp"
+                                        : "imp"));
                           },
                           child: CircleAvatar(
                             child: Icon(
@@ -51,7 +79,14 @@ class HomePage extends StatelessWidget {
                         )
                       : GestureDetector(
                           onTap: () {
-                            allTodos.changeImportant(i);
+                            allTodos.updateTodo(Todo(
+                                id: allTodos.items[i].id,
+                                title: allTodos.items[i].title,
+                                description: allTodos.items[i].description,
+                                isImportant:
+                                    allTodos.items[i].isImportant == "imp"
+                                        ? "nimp"
+                                        : "imp"));
                           },
                           child: CircleAvatar(
                             backgroundColor: Colors.grey,
@@ -91,7 +126,8 @@ class HomePage extends StatelessWidget {
                                   actions: [
                                     ElevatedButton(
                                         onPressed: () {
-                                          allTodos.deleteTodo(i);
+                                          allTodos
+                                              .deleteTodo(allTodos.items[i].id);
                                           Navigator.pop(context);
                                         },
                                         child: Text("Confirm Delete")),
@@ -123,10 +159,14 @@ addOrUpdateDialog(BuildContext context, bool isAdded,
     {Todo? todo, int? index}) {
   TextEditingController cTitle = TextEditingController();
   TextEditingController cDesc = TextEditingController();
+  TextEditingController cID = TextEditingController();
+  TextEditingController cImp = TextEditingController();
 
   if (!isAdded) {
     cTitle.text = todo!.title;
     cDesc.text = todo.description;
+    cID.text = todo.id.toString();
+    cImp.text = todo.isImportant;
   }
 
   final allTodos = Provider.of<TodoModel>(context, listen: false);
@@ -152,19 +192,17 @@ addOrUpdateDialog(BuildContext context, bool isAdded,
           onPressed: () {
             if (isAdded) {
               allTodos.addTodo(Todo(
-                  id: Random().nextInt(1000000),
+                  id: Random().nextInt(1000),
                   title: cTitle.text,
                   description: cDesc.text,
-                  isImportant: true));
+                  isImportant: ""));
             } else {
               // Update Code
-              allTodos.updateTodo(
-                  index!,
-                  Todo(
-                      id: Random().nextInt(1000000),
-                      title: cTitle.text,
-                      description: cDesc.text,
-                      isImportant: true));
+              allTodos.updateTodo(Todo(
+                  id: int.parse(cID.text),
+                  title: cTitle.text,
+                  description: cDesc.text,
+                  isImportant: cImp.text));
             }
             Navigator.pop(context);
           },

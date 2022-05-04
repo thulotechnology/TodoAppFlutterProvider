@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app_provider/dabasehelper.dart';
 
 class Todo {
   // Properties
@@ -6,7 +7,7 @@ class Todo {
   late int id;
   late String title;
   late String description;
-  late bool isImportant;
+  late String isImportant;
 
   // Constructor
   Todo(
@@ -14,43 +15,61 @@ class Todo {
       required this.title,
       required this.description,
       required this.isImportant});
+
+  // Todo Copy
+  Todo copy(
+          {int? id, String? title, String? description, String? isImportant}) =>
+      Todo(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        isImportant: isImportant ?? this.isImportant,
+      );
+
+  // Get Info In Map
+  Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "title": title,
+      "description": description,
+      "isImportant": isImportant
+    };
+  }
 }
 
 class TodoModel extends ChangeNotifier {
   // Declare Todos in Private
   List<Todo> _todos = [];
 
+  void loadTodos() async {
+    _todos = await DatabaseHelper.instance.listAllTodo();
+    notifyListeners();
+  }
+
   // Getter
   List<Todo> get items => _todos;
 
   // Add Todo
-  void addTodo(Todo todo) {
-    _todos.add(todo);
-    notifyListeners();
-  }
-
-  // To Remove All Todo Items
-  void clearTodo() {
-    _todos.clear();
-    notifyListeners();
+  void addTodo(Todo todo) async {
+    await DatabaseHelper.instance.addTodo(todo);
+    loadTodos();
   }
 
   /// To Delete Todo By ID
-  void deleteTodo(int index) {
-    _todos.removeAt(index);
-    notifyListeners();
+  void deleteTodo(int index) async {
+    await DatabaseHelper.instance.deleteTodo(index);
+    loadTodos();
+  }
+
+  /// To Delete Todo By ID
+  void deleteAll() async {
+    await DatabaseHelper.instance.deleteAll();
+    loadTodos();
   }
 
   /// Update Todo
-  void updateTodo(int index, Todo todo) {
-    _todos[index].title = todo.title;
-    _todos[index].description = todo.description;
-    notifyListeners();
-  }
-
-  // Make Is Not Important
-  void changeImportant(int index) {
-    _todos[index].isImportant = !_todos[index].isImportant;
-    notifyListeners();
+  void updateTodo(Todo todo) async {
+    await DatabaseHelper.instance.updateTodo(todo);
+    loadTodos();
   }
 }
