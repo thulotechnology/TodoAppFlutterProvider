@@ -9,7 +9,6 @@ class Todo {
   late bool isImportant;
 
   // Constructor
-
   Todo(
       {required this.id,
       required this.title,
